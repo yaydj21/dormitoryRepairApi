@@ -12,6 +12,12 @@ router.get('/noticeInfo',noticeHandler.getNotices);
 // 删除通知信息
 router.put('/noticeDataDelete',noticeHandler.deleteNotices);
 
+// 修改通知信息
+router.post('/updateNotices',noticeHandler.updateNotices);
+
+// 增加通知信息
+router.post('/addNotice',noticeHandler.addNotice);
+
 
 module.exports = router;
 

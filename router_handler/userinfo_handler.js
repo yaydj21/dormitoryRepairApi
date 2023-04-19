@@ -4,7 +4,7 @@ const db = require('../db/index');
 // 获取用户基本信息的处理函数
 exports.getUserInfo = (req,res) =>{
     // 定义查询用户信息的SQL语句
-    const sql = `select id, username,nickname,user_pic from users where id=?`;
+    const sql = `select id, username,nickname,user_pic from student where account=?`;
     // 调用db.query()执行SQL语句
     db.query(sql,req.user.id,(err,results) =>{
         if(err){
@@ -14,6 +14,8 @@ exports.getUserInfo = (req,res) =>{
         if(results.length !==1){
             return res.cc('获取用户信息失败');
         }
+        
+        console.log(results);
 
         // 用户信息获取成功
         res.send({
@@ -23,3 +25,5 @@ exports.getUserInfo = (req,res) =>{
         });
     });
 }
+
+

@@ -17,15 +17,32 @@ exports.getStudents = (req, res) => {
     })
 }
 
-//保存学生头像到minio
+//获取id学生信息
+exports.getIdStudents = (req, res) => {
+    const account = req.fields.account;
+    console.log(account);
+    const sql = 'select * from student where account=?';
+    db.query(sql, account,(err, results) => {
+        if (err) {
+            return res.send(err);
+        }
+        res.send({
+            data: results
+        })
+
+    })
+}
+
+
+
+//保存故障图片到minio
 exports.uploadAvatar = (req, res) => {
-    // const userinfo = req.body;
-    // console.log(userinfo);
     const file = req.files.file;
+    console.log(file);
     // 文件路径
     const filePath = file.path;
-    // 将文件名设置为id.jpg
-    const fileName = req.query.id+'.jpg';
+    // 将文件名设置为orderId.jpg
+    const fileName = req.query.orderId+'.jpg';
     // console.log(file.name);
     uploadFile(fileName, filePath);
 
@@ -64,10 +81,27 @@ exports.uploadAvatar = (req, res) => {
             // 'https://www.starbug.vip/oss/dormitory-bucket/' + fileName
             
             // return res.send('https://www.starbug.vip/oss/dormitory-bucket/' + fileName);
-            return res.send({status:200});
+            return res.send({
+                status:200,
+                url:`https://www.starbug.vip/oss/dormitory-bucket/${fileName}`
+            });
 
         }
 
     }
+
+}
+
+// 删除某个学生信息
+exports.studentInfoDelete = (req, res) => {
+    const orderId = req.fields.account;
+    // 根据id把删除状态改为 1已删除
+    const sql = 'update student set status = 1 where account = ?';
+    db.query(sql, orderId, (err, results) => {
+        if (err) {
+            return res.send(err);
+        }
+        res.send({ status: '200', message: '删除成功！' });
+    })
 
 }
