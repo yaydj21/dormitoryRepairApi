@@ -78,8 +78,9 @@ exports.updateRepairIdOrderInfo = (req, res) => {
     // 权限是管理员
     // if (orderInfo.role === '0') {
         // 如果要修改订单信息
-        const sql = `UPDATE repairOrder SET orderId = ?, content = ?, address = ?, applicant = ?, telNum = ?, email = ?, faultPicture = ?,status = ? WHERE orderId = ?;`
-        const val = [orderInfo.orderId, orderInfo.content, orderInfo.address, orderInfo.applicant, orderInfo.telNum, orderInfo.email, orderInfo.faultPicture, orderInfo.status, orderInfo.orderId]
+        console.log(orderInfo.faultType);
+        const sql = `UPDATE repairOrder SET orderId = ?, content = ?, address = ?, applicant = ?, telNum = ?, email = ?, faultPicture = ?,status = ?,faultType = ? WHERE orderId = ?;`
+        const val = [orderInfo.orderId, orderInfo.content, orderInfo.address, orderInfo.applicant, orderInfo.telNum, orderInfo.email, orderInfo.faultPicture, orderInfo.status,orderInfo.faultType, orderInfo.orderId]
         db.query(sql, val, (err, results) => {
             if (err) {
                 console.log(err);
@@ -149,22 +150,22 @@ exports.getHomeRepairTag = (req, res) => {
     const firstDayString = `${year}-${month}-01`;
     const lastDayString = `${year}-${month}-${lastDay.getDate()}`;
     // 获取今日报修数量
-    const sql1 = `SELECT COUNT(*) AS count FROM repairOrder WHERE DATE(orderId) = '${todayString}';`;
+    const sql1 = `SELECT COUNT(*) AS count FROM repairOrder WHERE DATE(orderId) = '${todayString}'AND deleteStatus = 0;`;
 
     // 获取今日已维修数量
-    const sql2 = `SELECT COUNT(*) AS count FROM repairOrder WHERE DATE(orderId) = '${todayString}' AND status = 2;`;
+    const sql2 = `SELECT COUNT(*) AS count FROM repairOrder WHERE DATE(orderId) = '${todayString}' AND status = 2 AND deleteStatus = 0;`;
 
     // 获取今日未维修数量
-    const sql3 = `SELECT COUNT(*) AS count FROM repairOrder WHERE DATE(orderId) = '${todayString}' AND status = 0;`;
+    const sql3 = `SELECT COUNT(*) AS count FROM repairOrder WHERE DATE(orderId) = '${todayString}' AND status = 0 AND deleteStatus = 0;`;
 
     // 获取本月报修数量
-    const sql4 = `SELECT COUNT(*) AS count FROM repairOrder WHERE DATE(orderId) >= '${firstDayString}' AND DATE(orderId) <= '${lastDayString}';`;
+    const sql4 = `SELECT COUNT(*) AS count FROM repairOrder WHERE DATE(orderId) >= '${firstDayString}' AND DATE(orderId) <= '${lastDayString}' AND deleteStatus = 0;`;
 
     // 获取本月已维修数量
-    const sql5 = `SELECT COUNT(*) AS count FROM repairOrder WHERE DATE(orderId) >= '${firstDayString}' AND DATE(orderId) <= '${lastDayString}' AND status = 2;`;
+    const sql5 = `SELECT COUNT(*) AS count FROM repairOrder WHERE DATE(orderId) >= '${firstDayString}' AND DATE(orderId) <= '${lastDayString}' AND status = 2 AND deleteStatus = 0;`;
 
     // 获取本月未维修数量
-    const sql6 = `SELECT COUNT(*) AS count FROM repairOrder WHERE DATE(orderId) >= '${firstDayString}' AND DATE(orderId) <= '${lastDayString}' AND status = 0;`;
+    const sql6 = `SELECT COUNT(*) AS count FROM repairOrder WHERE DATE(orderId) >= '${firstDayString}' AND DATE(orderId) <= '${lastDayString}' AND status = 0 AND deleteStatus = 0;`;
 
     // 查询今日报修数量
     db.query(sql1 + sql2 + sql3 + sql4 + sql5 + sql6, (error, results) => {
@@ -216,7 +217,7 @@ exports.getHomeRepairTag = (req, res) => {
 
 // 获取近7天的报修类型
 exports.getRepairOrders7Days = (req, res) => {
-    const sql = 'SELECT faultType, orderId FROM repairOrder WHERE DATE(orderId) >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)';
+    const sql = 'SELECT faultType, orderId FROM repairOrder WHERE DATE(orderId) >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND deleteStatus = 0';
     db.query(sql, (err, results) => {
         if (err) {
             return res.send(err);
@@ -276,7 +277,7 @@ exports.getTodayRepairTypesRepairCount = (req, res) => {
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
     const todayString = `${year}${month}${day}`;
-    const sql = `SELECT faultType, COUNT(*) as count FROM repairOrder WHERE DATE(orderId) = '${todayString}' GROUP BY faultType`;
+    const sql = `SELECT faultType, COUNT(*) as count FROM repairOrder WHERE DATE(orderId) = '${todayString}' AND deleteStatus = 0 GROUP BY faultType`;
 
     db.query(sql, (error, results, fields) => {
         if (error) throw error;
@@ -311,9 +312,9 @@ exports.getMonthRepairTypesRepairCount = (req, res) => {
     const thisMonth = `${year}-${month}-01`;//月初
     const thisMonthLastDayString = `${year}-${month}-${thisMonthLastDay.getDate()}`;//3-31 月末
     // 上个月
-    const sql1 = `SELECT faultType, orderId FROM repairOrder WHERE DATE(orderId) >= '${lastMonth}' AND DATE(orderId) <= '${lastMonthLastDayString}';`;
+    const sql1 = `SELECT faultType, orderId FROM repairOrder WHERE DATE(orderId) >= '${lastMonth}' AND DATE(orderId) <= '${lastMonthLastDayString}' AND deleteStatus = 0;`;
     // 本月
-    const sql2 = `SELECT faultType, orderId FROM repairOrder WHERE DATE(orderId) >= '${thisMonth}' AND DATE(orderId) <= '${thisMonthLastDayString}';`;
+    const sql2 = `SELECT faultType, orderId FROM repairOrder WHERE DATE(orderId) >= '${thisMonth}' AND DATE(orderId) <= '${thisMonthLastDayString}' AND deleteStatus = 0;`;
 
     db.query(sql1 + sql2, (error, results) => {
         if (error) {
@@ -366,7 +367,7 @@ exports.getMonthRepairTypesRepairCount = (req, res) => {
 
 // 获取系统全部报修的类型接口
 exports.getAllRepairTypesRepairCount = (req, res) => {
-    db.query(`SELECT faultType, orderId FROM repairOrder;`, (error, results) => {
+    db.query(`SELECT faultType, orderId FROM repairOrder where deleteStatus = 0;`, (error, results) => {
         if (error) {
             console.error(error);
             res.status(500).json({ error: 'Internal server error' });
